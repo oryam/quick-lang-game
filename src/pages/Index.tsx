@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { languages, Language, WordCategory, getAllCategories } from "@/data/words";
+import { Language, WordCategory, getAllCategories, getLanguages } from "@/data/words";
 import { Play } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [languages, setLanguages] = useState(getLanguages());
   const [sourceLanguage, setSourceLanguage] = useState<Language>("fr");
   const [targetLanguage, setTargetLanguage] = useState<Language>("kr");
   const [wordCount, setWordCount] = useState(5);
@@ -19,7 +20,16 @@ const Index = () => {
   const [selectedCategories, setSelectedCategories] = useState<WordCategory[]>([]);
 
   useEffect(() => {
-    // Load dynamic categories from storage
+    // Load dynamic languages and categories from storage
+    const currentLanguages = getLanguages();
+    setLanguages(currentLanguages);
+    
+    // Set default languages if available
+    if (currentLanguages.length > 0) {
+      setSourceLanguage(currentLanguages[0].id);
+      setTargetLanguage(currentLanguages[1]?.id || currentLanguages[0].id);
+    }
+    
     const categoryList = getAllCategories();
     setAvailableCategories(categoryList);
     // Initialize selected categories with all available ones

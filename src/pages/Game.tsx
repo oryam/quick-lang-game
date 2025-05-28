@@ -8,7 +8,7 @@ import { useGameState } from "@/hooks/useGameState";
 import { Play, ArrowRight, Pause, Volume } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { languages } from "@/data/words";
+import { getLanguages } from "@/data/words";
 
 const Game = () => {
   const navigate = useNavigate();
@@ -50,6 +50,7 @@ const Game = () => {
 
   // Helper function to get language label from ID
   const getLanguageLabel = (languageId: string) => {
+    const languages = getLanguages();
     const language = languages.find(lang => lang.id === languageId);
     return language ? language.label : languageId;
   };

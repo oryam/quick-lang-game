@@ -1,5 +1,4 @@
-
-export type Language = 'fr' | 'kr' | 'en';
+export type Language = string;
 
 export type WordCategory = string;
 
@@ -16,12 +15,38 @@ export interface TranslationGroup {
   translations: Record<Language, string>;
 }
 
-// Updated language definitions with id directly as the language key
-export const languages: { id: Language; label: string }[] = [
+export interface LanguageDefinition {
+  id: Language;
+  label: string;
+}
+
+// Langues par défaut
+const defaultLanguages: LanguageDefinition[] = [
   { id: 'fr', label: 'Français' },
   { id: 'kr', label: 'Coréen' },
   { id: 'en', label: 'Anglais' }
 ];
+
+// Gestion des langues
+export const getLanguages = (): LanguageDefinition[] => {
+  const saved = localStorage.getItem('langLearnLanguages');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (error) {
+      console.error("Erreur lors du parsage des langues:", error);
+      saveLanguagesToLocalStorage(defaultLanguages);
+      return defaultLanguages;
+    }
+  }
+  
+  saveLanguagesToLocalStorage(defaultLanguages);
+  return defaultLanguages;
+};
+
+export const saveLanguagesToLocalStorage = (languages: LanguageDefinition[]): void => {
+  localStorage.setItem('langLearnLanguages', JSON.stringify(languages));
+};
 
 // Générer un ID unique pour un groupe de traduction
 const generateGroupId = (): string => {
@@ -349,6 +374,9 @@ export const saveTranslationGroupsToLocalStorage = (groups: TranslationGroup[]):
 // Parser pour le format CSV
 export const parseCsvData = (csvContent: string): TranslationGroup[] => {
   try {
+    const currentLanguages = getLanguages();
+    const languageIds = currentLanguages.map(lang => lang.id);
+    
     // Split by newlines and filter out empty lines
     const lines = csvContent.split('\n').filter(line => line.trim() !== '');
     
@@ -368,20 +396,13 @@ export const parseCsvData = (csvContent: string): TranslationGroup[] => {
       throw new Error('La première colonne doit être "category"');
     }
     
-    // Map language codes to Language type
-    const languageMap: Record<string, Language> = {
-      'fr': 'fr',
-      'kr': 'kr',
-      'en': 'en'
-    };
-    
     // Extract language columns
     const languageColumns: { index: number; language: Language }[] = [];
     for (let i = 1; i < header.length; i++) {
       const langCode = header[i].toLowerCase() as Language;
       
-      if (!['fr', 'kr', 'en'].includes(langCode)) {
-        throw new Error(`Code de langue non reconnu: ${langCode}. Utilisez fr, kr, ou en.`);
+      if (!languageIds.includes(langCode)) {
+        throw new Error(`Code de langue non reconnu: ${langCode}. Utilisez une des langues configurées: ${languageIds.join(', ')}.`);
       }
       
       languageColumns.push({ index: i, language: langCode });
@@ -401,11 +422,12 @@ export const parseCsvData = (csvContent: string): TranslationGroup[] => {
       }
       
       const category = values[0].trim();
-      const translations: Record<Language, string> = {
-        fr: '',
-        kr: '',
-        en: ''
-      };
+      const translations: Record<Language, string> = {};
+      
+      // Initialize with empty strings for all languages
+      languageIds.forEach(langId => {
+        translations[langId] = '';
+      });
       
       // Map translations to appropriate languages
       languageColumns.forEach(col => {
@@ -432,17 +454,20 @@ export const parseCsvData = (csvContent: string): TranslationGroup[] => {
 // Convertir les groupes de traduction en format CSV
 export const convertToCsvFormat = (groups: TranslationGroup[]): string => {
   try {
-    // Create header with language ids directly
-    const header = ['category', 'fr', 'kr', 'en'];
+    const currentLanguages = getLanguages();
+    const languageIds = currentLanguages.map(lang => lang.id);
+    
+    // Create header with current language ids
+    const header = ['category', ...languageIds];
     
     // Create rows
     const rows = groups.map(group => {
       const row = [group.category];
       
       // Add each language translation
-      for (const lang of ['fr', 'kr', 'en'] as Language[]) {
-        row.push(group.translations[lang] || '');
-      }
+      languageIds.forEach(langId => {
+        row.push(group.translations[langId] || '');
+      });
       
       return row;
     });

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { 
-  TranslationGroup, WordCategory, Language, languages,
+  TranslationGroup, WordCategory, Language,
   getTranslationTable, addTranslationGroup, updateTranslationGroup, deleteTranslationGroup,
   getAllCategories, parseCsvData, convertToCsvFormat, saveTranslationGroupsToLocalStorage,
-  resetTranslationData
+  resetTranslationData, getLanguages, saveLanguagesToLocalStorage, LanguageDefinition
 } from "@/data/words";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,32 +14,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow, 
 } from "@/components/ui/table";
-import { 
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import { 
-  Plus, Pen, Trash, Search, Filter, X, 
+  Plus, Pen, Trash, X,
   Import, Download, Copy, RefreshCcw
 } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LanguageManager from "@/components/LanguageManager";
 
 const WordsManager = () => {
   const [translationGroups, setTranslationGroups] = useState<TranslationGroup[]>([]);
   const [filteredGroups, setFilteredGroups] = useState<TranslationGroup[]>([]);
+  const [languages, setLanguages] = useState<LanguageDefinition[]>(getLanguages());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<TranslationGroup | null>(null);
   const [newGroup, setNewGroup] = useState<{
     translations: Record<Language, string>;
     category: WordCategory;
   }>({
-    translations: {
-      fr: "",
-      kr: "",
-      en: ""
-    },
+    translations: {},
     category: "CORPS_HUMAIN"
   });
   
@@ -49,45 +42,36 @@ const WordsManager = () => {
   const [exportedCsv, setExportedCsv] = useState("");
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   
-  // Filtre et tri
-  const [filters, setFilters] = useState<{
-    category: 'all' | WordCategory;
-    searchTerms: Record<Language, string>;
-  }>({
-    category: 'all',
-    searchTerms: { fr: "", kr: "", en: "" }
-  });
-  
-  const [sortConfig, setSortConfig] = useState<{
-    key: Language | 'category';
-    direction: 'asc' | 'desc' | 'none';
-  }>({
-    key: 'fr',
-    direction: 'none'
-  });
+  // Simple search
+  const [searchTerm, setSearchTerm] = useState("");
   
   // État pour la gestion des catégories
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-  
   const [categoryList, setCategoryList] = useState(getAllCategories());
-  
   const [newCategory, setNewCategory] = useState({ id: "", label: "" });
   const [editingCategoryIndex, setEditingCategoryIndex] = useState<number | null>(null);
   
   const { toast } = useToast();
 
-  // Vérifier si des filtres sont actifs
-  const hasActiveFilters = () => {
-    return filters.category !== 'all' || 
-      Object.values(filters.searchTerms).some(term => term.trim() !== "");
-  };
-  
+  // Initialiser les traductions avec les langues disponibles
+  useEffect(() => {
+    const initialTranslations: Record<Language, string> = {};
+    
+    languages.forEach(lang => {
+      initialTranslations[lang.id] = "";
+    });
+    
+    setNewGroup(prev => ({
+      ...prev,
+      translations: initialTranslations
+    }));
+  }, [languages]);
+
   // Charger les groupes de traduction depuis le localStorage
   useEffect(() => {
-    // Réinitialiser les données au démarrage pour s'assurer qu'elles utilisent le bon format
     const loadedGroups = getTranslationTable();
     setTranslationGroups(loadedGroups);
-    applyFiltersAndSort(loadedGroups);
+    applySearch(loadedGroups, searchTerm);
     
     // Load categories
     setCategoryList(getAllCategories());
@@ -96,94 +80,34 @@ const WordsManager = () => {
     console.log("Translation groups:", loadedGroups);
   }, []);
 
-  // Appliquer les filtres et le tri
-  const applyFiltersAndSort = (groups: TranslationGroup[]) => {
-    // Filtrer par catégorie
-    let result = groups;
-    if (filters.category !== 'all') {
-      result = result.filter(group => group.category === filters.category);
+  // Appliquer la recherche
+  const applySearch = (groups: TranslationGroup[], term: string = searchTerm) => {
+    if (!term.trim()) {
+      setFilteredGroups(groups);
+      return;
     }
     
-    // Filtrer par termes de recherche
-    Object.entries(filters.searchTerms).forEach(([lang, term]) => {
-      if (term.trim() !== "") {
-        const language = lang as Language;
-        const lowerTerm = term.toLowerCase();
-        result = result.filter(group => {
-          const translation = group.translations[language];
-          return translation && translation.toLowerCase().includes(lowerTerm);
-        });
-      }
+    const lowerTerm = term.toLowerCase();
+    const result = groups.filter(group => {
+      // Search in all translations for all languages
+      return Object.values(group.translations).some(translation => 
+        translation && translation.toLowerCase().includes(lowerTerm)
+      );
     });
-    
-    // Appliquer le tri
-    if (sortConfig.direction !== 'none') {
-      result = [...result].sort((a, b) => {
-        let valueA: string;
-        let valueB: string;
-        
-        if (sortConfig.key === 'category') {
-          valueA = a.category;
-          valueB = b.category;
-        } else {
-          valueA = a.translations[sortConfig.key] || "";
-          valueB = b.translations[sortConfig.key] || "";
-        }
-        
-        if (valueA < valueB) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (valueA > valueB) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
     
     setFilteredGroups(result);
   };
 
-  // Gestionnaire de changement de filtre
-  const handleFilterChange = (field: 'category' | Language, value: string) => {
-    let newFilters = { ...filters };
-    
-    if (field === 'category') {
-      newFilters.category = value as 'all' | WordCategory;
-    } else {
-      newFilters.searchTerms = {
-        ...newFilters.searchTerms,
-        [field]: value
-      };
-    }
-    
-    setFilters(newFilters);
-    applyFiltersAndSort(translationGroups);
+  // Gestionnaire de changement de recherche
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    applySearch(translationGroups, value);
   };
 
-  // Effacer tous les filtres
-  const clearAllFilters = () => {
-    const resetFilters = {
-      category: 'all' as const,
-      searchTerms: { fr: "", kr: "", en: "" }
-    };
-    setFilters(resetFilters);
-    applyFiltersAndSort(translationGroups);
-  };
-
-  // Gestionnaire de changement de tri
-  const handleSort = (key: Language | 'category') => {
-    let direction: 'asc' | 'desc' | 'none' = 'asc';
-    
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === 'asc') {
-        direction = 'desc';
-      } else if (sortConfig.direction === 'desc') {
-        direction = 'none';
-      }
-    }
-    
-    setSortConfig({ key, direction });
-    applyFiltersAndSort(translationGroups);
+  // Effacer la recherche
+  const clearSearch = () => {
+    setSearchTerm("");
+    applySearch(translationGroups, "");
   };
 
   // Ajouter ou mettre à jour un groupe de traduction
@@ -227,7 +151,7 @@ const WordsManager = () => {
       // Recharger les groupes et réinitialiser le formulaire
       const updatedGroups = getTranslationTable();
       setTranslationGroups(updatedGroups);
-      applyFiltersAndSort(updatedGroups);
+      applySearch(updatedGroups, searchTerm);
       setCategoryList(getAllCategories()); // Mettre à jour la liste des catégories
       resetForm();
       setIsDialogOpen(false);
@@ -248,7 +172,7 @@ const WordsManager = () => {
       // Recharger les groupes
       const updatedGroups = getTranslationTable();
       setTranslationGroups(updatedGroups);
-      applyFiltersAndSort(updatedGroups);
+      applySearch(updatedGroups, searchTerm);
       setCategoryList(getAllCategories()); // Mettre à jour la liste des catégories
       
       toast({
@@ -277,12 +201,13 @@ const WordsManager = () => {
   // Réinitialiser le formulaire
   const resetForm = () => {
     setEditingGroup(null);
+    const emptyTranslations: Record<Language, string> = {};
+    languages.forEach(lang => {
+      emptyTranslations[lang.id] = "";
+    });
+    
     setNewGroup({
-      translations: {
-        fr: "",
-        kr: "",
-        en: ""
-      },
+      translations: emptyTranslations,
       category: "CORPS_HUMAIN"
     });
   };
@@ -310,7 +235,7 @@ const WordsManager = () => {
       
       // Refresh data
       setTranslationGroups(updatedGroups);
-      applyFiltersAndSort(updatedGroups);
+      applySearch(updatedGroups, searchTerm);
       setCategoryList(getAllCategories()); // Mettre à jour la liste des catégories
       
       // Close dialog and reset form
@@ -373,11 +298,6 @@ const WordsManager = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  // Vérifier si une colonne est filtrée
-  const isColumnFiltered = (field: Language) => {
-    return filters.searchTerms[field].trim() !== "";
   };
 
   // Afficher l'étiquette de catégorie
@@ -474,37 +394,22 @@ const WordsManager = () => {
     });
   };
 
-  // Composant pour le filtre de catégorie
-  const CategoryFilter = () => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8">
-          <Filter className="h-3.5 w-3.5 mr-2" />
-          Catégorie
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-48 p-4">
-        <div className="space-y-2">
-          <Select
-            value={filters.category}
-            onValueChange={(value) => handleFilterChange('category', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Toutes les catégories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les catégories</SelectItem>
-              {categoryList.map(category => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
+  // Gérer les changements de langues
+  const handleLanguagesChange = (newLanguages: LanguageDefinition[]) => {
+    setLanguages(newLanguages);
+    saveLanguagesToLocalStorage(newLanguages);
+    
+    // Mettre à jour les traductions du formulaire
+    const newTranslations: Record<Language, string> = {};
+    newLanguages.forEach(lang => {
+      newTranslations[lang.id] = newGroup.translations[lang.id] || "";
+    });
+    
+    setNewGroup(prev => ({
+      ...prev,
+      translations: newTranslations
+    }));
+  };
 
   // Helper to get translation by language ID
   const getTranslationForLanguage = (group: TranslationGroup, langId: Language): string => {
@@ -516,7 +421,7 @@ const WordsManager = () => {
     try {
       const resetGroups = resetTranslationData();
       setTranslationGroups(resetGroups);
-      applyFiltersAndSort(resetGroups);
+      applySearch(resetGroups, searchTerm);
       setCategoryList(getAllCategories());
       
       toast({
@@ -532,53 +437,36 @@ const WordsManager = () => {
     }
   };
 
-  // For debugging purpose
-  useEffect(() => {
-    console.log("Translation groups:", translationGroups);
-    console.log("Filtered groups:", filteredGroups);
-    
-    // Debug translations structure
-    if (filteredGroups.length > 0) {
-      console.log("First group translations:", filteredGroups[0].translations);
-    }
-  }, [translationGroups, filteredGroups]);
-
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-6 text-langlearn-blue-dark">Gestion des mots et traductions</h1>
         
-        
-        
         <Tabs defaultValue="table" className="mb-6">
-          
-          
           <TabsList className="mb-4">
             <TabsTrigger value="table">Tableau</TabsTrigger>
             <TabsTrigger value="import-export">Import / Export</TabsTrigger>
+            <TabsTrigger value="languages">Langues</TabsTrigger>
           </TabsList>
           
           <TabsContent value="table">
-            
-            
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
               <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <Input
-                  placeholder="Rechercher..."
-                  value={filters.searchTerms.fr}
-                  onChange={(e) => handleFilterChange('fr', e.target.value)}
+                  placeholder="Rechercher un mot..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="w-full sm:w-64"
                 />
-                <CategoryFilter />
-                {hasActiveFilters() && (
+                {searchTerm && (
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={clearAllFilters} 
+                    onClick={clearSearch} 
                     className="h-8 flex items-center"
                   >
                     <X className="h-3.5 w-3.5 mr-1" />
-                    Effacer les filtres
+                    Effacer
                   </Button>
                 )}
               </div>
@@ -656,7 +544,7 @@ const WordsManager = () => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={languages.length + 2} className="text-center py-8">
-                        Aucune traduction trouvée
+                        {searchTerm ? "Aucun mot trouvé pour cette recherche" : "Aucune traduction trouvée"}
                       </TableCell>
                     </TableRow>
                   )}
@@ -665,14 +553,13 @@ const WordsManager = () => {
             </div>
           </TabsContent>
           
-          
           <TabsContent value="import-export">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="border rounded-lg p-6">
                 <h2 className="text-xl font-semibold mb-4">Importer des données (CSV)</h2>
                 <p className="text-sm text-gray-600 mb-4">
                   Importez des données au format CSV avec le séparateur "|". <br />
-                  Format attendu: <code>category|fr|kr|en</code> <br />
+                  Format attendu: <code>category|{languages.map(l => l.id).join('|')}</code> <br />
                   Exemple: <code>FRUIT|pomme|사과|apple</code>
                 </p>
                 
@@ -699,10 +586,16 @@ const WordsManager = () => {
               </div>
             </div>
           </TabsContent>
+          
+          <TabsContent value="languages">
+            <LanguageManager 
+              languages={languages}
+              onLanguagesChange={handleLanguagesChange}
+            />
+          </TabsContent>
         </Tabs>
       </div>
 
-      
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -719,7 +612,7 @@ const WordsManager = () => {
                 <Label htmlFor={`word-${language.id}`}>{language.label}</Label>
                 <Input
                   id={`word-${language.id}`}
-                  value={newGroup.translations[language.id]}
+                  value={newGroup.translations[language.id] || ''}
                   onChange={(e) => setNewGroup({
                     ...newGroup,
                     translations: {
@@ -761,7 +654,6 @@ const WordsManager = () => {
         </DialogContent>
       </Dialog>
 
-      
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -783,7 +675,7 @@ const WordsManager = () => {
                 onChange={(e) => setNewCategory({...newCategory, id: e.target.value.toUpperCase()})}
                 placeholder="Identifiant unique (ex: ANIMAUX)"
                 className="mt-1"
-                disabled={editingCategoryIndex !== null} // Ne pas permettre la modification de l'ID pour éviter les problèmes de référence
+                disabled={editingCategoryIndex !== null}
               />
             </div>
             <div>
@@ -797,7 +689,6 @@ const WordsManager = () => {
               />
             </div>
             
-            {/* Liste des catégories existantes */}
             <div>
               <h3 className="font-medium mb-2">Catégories existantes</h3>
               <div className="border rounded-md overflow-hidden">
@@ -854,14 +745,13 @@ const WordsManager = () => {
         </DialogContent>
       </Dialog>
 
-      
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Importer des données CSV</DialogTitle>
             <DialogDescription>
               Collez votre contenu CSV ci-dessous. Assurez-vous qu'il est au format attendu:<br />
-              <code>category|fr|kr|en</code><br />
+              <code>category|{languages.map(l => l.id).join('|')}</code><br />
               <code>FRUIT|pomme|사과|apple</code>
             </DialogDescription>
           </DialogHeader>
@@ -872,7 +762,7 @@ const WordsManager = () => {
                 id="csvContent"
                 value={csvContent}
                 onChange={(e) => setCsvContent(e.target.value)}
-                placeholder="category|fr|kr|en&#10;FRUIT|pomme|사과|apple"
+                placeholder={`category|${languages.map(l => l.id).join('|')}\nFRUIT|pomme|사과|apple`}
                 className="h-60 font-mono"
               />
             </div>
@@ -891,7 +781,6 @@ const WordsManager = () => {
         </DialogContent>
       </Dialog>
 
-      
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
