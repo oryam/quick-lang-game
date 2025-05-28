@@ -31,8 +31,9 @@ const App = () => {
             <div className="flex-grow">
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/game" element={<Game />} />
-                <Route path="/words-manager" element={<WordsManager />} />
+                <Route path="game" element={<Game />} />
+                <Route path="words-manager" element={<WordsManager />} />
+                <Route path="/quick-lang-game" element={<Index />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
