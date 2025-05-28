@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Language, Word, getWordsByLanguage, getTranslation } from '../data/words';
 
@@ -16,7 +17,7 @@ interface WordPair {
 export const useGameState = () => {
   const [settings, setSettings] = useState<GameSettings>({
     sourceLanguage: 'fr',
-    targetLanguage: 'kr',
+    targetLanguage: 'ko',
     wordCount: 5,
     categories: ['CORPS_HUMAIN', 'FRUIT', 'ACTION']
   });

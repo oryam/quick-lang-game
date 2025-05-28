@@ -1,3 +1,4 @@
+
 export type Language = string;
 
 export type WordCategory = string;
@@ -23,7 +24,7 @@ export interface LanguageDefinition {
 // Langues par défaut
 const defaultLanguages: LanguageDefinition[] = [
   { id: 'fr', label: 'Français' },
-  { id: 'kr', label: 'Coréen' },
+  { id: 'ko', label: 'Coréen' },
   { id: 'en', label: 'Anglais' }
 ];
 
@@ -66,7 +67,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'CORPS_HUMAIN',
     translations: {
       fr: 'tête',
-      kr: '머리',
+      ko: '머리',
       en: 'head'
     }
   },
@@ -75,7 +76,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'CORPS_HUMAIN',
     translations: {
       fr: 'main',
-      kr: '손',
+      ko: '손',
       en: 'hand'
     }
   },
@@ -84,7 +85,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'CORPS_HUMAIN',
     translations: {
       fr: 'pied',
-      kr: '발',
+      ko: '발',
       en: 'foot'
     }
   },
@@ -93,7 +94,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'CORPS_HUMAIN',
     translations: {
       fr: 'bras',
-      kr: '팔',
+      ko: '팔',
       en: 'arm'
     }
   },
@@ -102,7 +103,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'CORPS_HUMAIN',
     translations: {
       fr: 'nez',
-      kr: '코',
+      ko: '코',
       en: 'nose'
     }
   },
@@ -111,7 +112,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'CORPS_HUMAIN',
     translations: {
       fr: 'yeux',
-      kr: '눈',
+      ko: '눈',
       en: 'eyes'
     }
   },
@@ -120,7 +121,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'CORPS_HUMAIN',
     translations: {
       fr: 'bouche',
-      kr: '입',
+      ko: '입',
       en: 'mouth'
     }
   },
@@ -131,7 +132,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'FRUIT',
     translations: {
       fr: 'pomme',
-      kr: '사과',
+      ko: '사과',
       en: 'apple'
     }
   },
@@ -140,7 +141,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'FRUIT',
     translations: {
       fr: 'pêche',
-      kr: '복숭아',
+      ko: '복숭아',
       en: 'peach'
     }
   },
@@ -149,7 +150,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'FRUIT',
     translations: {
       fr: 'poire',
-      kr: '배',
+      ko: '배',
       en: 'pear'
     }
   },
@@ -158,7 +159,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'FRUIT',
     translations: {
       fr: 'mangue',
-      kr: '망고',
+      ko: '망고',
       en: 'mango'
     }
   },
@@ -167,7 +168,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'FRUIT',
     translations: {
       fr: 'fraise',
-      kr: '딸기',
+      ko: '딸기',
       en: 'strawberry'
     }
   },
@@ -176,7 +177,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'FRUIT',
     translations: {
       fr: 'figue',
-      kr: '무화과',
+      ko: '무화과',
       en: 'fig'
     }
   },
@@ -185,7 +186,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'FRUIT',
     translations: {
       fr: 'ananas',
-      kr: '파인애플',
+      ko: '파인애플',
       en: 'pineapple'
     }
   },
@@ -196,7 +197,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'aller',
-      kr: '가다',
+      ko: '가다',
       en: 'go'
     }
   },
@@ -205,7 +206,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'partir',
-      kr: '떠나다',
+      ko: '떠나다',
       en: 'leave'
     }
   },
@@ -214,7 +215,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'venir',
-      kr: '오다',
+      ko: '오다',
       en: 'come'
     }
   },
@@ -223,7 +224,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'courir',
-      kr: '달리다',
+      ko: '달리다',
       en: 'run'
     }
   },
@@ -232,7 +233,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'marcher',
-      kr: '걷다',
+      ko: '걷다',
       en: 'walk'
     }
   },
@@ -241,7 +242,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'parler',
-      kr: '말하다',
+      ko: '말하다',
       en: 'speak'
     }
   },
@@ -250,7 +251,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'lancer',
-      kr: '던지다',
+      ko: '던지다',
       en: 'throw'
     }
   },
@@ -259,7 +260,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'sauter',
-      kr: '뛰다',
+      ko: '뛰다',
       en: 'jump'
     }
   },
@@ -268,7 +269,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'cuisiner',
-      kr: '요리하다',
+      ko: '요리하다',
       en: 'cook'
     }
   },
@@ -277,7 +278,7 @@ const defaultTranslationGroups: TranslationGroup[] = [
     category: 'ACTION',
     translations: {
       fr: 'nettoyer',
-      kr: '청소하다',
+      ko: '청소하다',
       en: 'clean'
     }
   }

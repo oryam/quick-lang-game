@@ -1,11 +1,10 @@
-
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useGameState } from "@/hooks/useGameState";
-import { Play, ArrowRight, Pause, Volume } from "lucide-react";
+import { Play, ArrowRight, Pause, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { getLanguages } from "@/data/words";
@@ -29,7 +28,7 @@ const Game = () => {
     togglePause,
     wordTranslations
   } = useGameState();
-  
+
   // Référence pour l'élément audio
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -67,46 +66,25 @@ const Game = () => {
     nextWord();
   };
 
-  // Fonction pour lire la prononciation du mot
-  const handlePlayPronunciation = (text: string, lang: string) => {
+  // Fonction pour ouvrir le lien de traduction Google
+  const handleOpenTranslation = (text: string, lang: string) => {
     try {
-      if (!audioRef.current) return;
-      
-      // Créer l'URL pour Google Text-to-Speech API
-      let ttsLang;
-      switch (lang) {
-        case 'fr':
-          ttsLang = 'fr-FR';
-          break;
-        case 'kr':
-          ttsLang = 'ko-KR';
-          break;
-        case 'en':
-          ttsLang = 'en-US';
-          break;
-        default:
-          ttsLang = 'en-US';
-      }
-      
       const encodedText = encodeURIComponent(text || '');
       
       if (encodedText) {
-        // Utiliser l'API de synthèse vocale de Google
+        // Utiliser l'ID de la langue directement pour ttsLang
+        const ttsLang = lang;
         const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodedText}`;
         
-        // Mettre à jour la source audio et lire
-        audioRef.current.src = url;
-        audioRef.current.play()
-          .catch(error => {
-            console.error("Erreur de lecture audio:", error);
-            toast({
-              title: "Erreur de lecture",
-              description: "Impossible de lire le son pour ce mot."
-            });
-          });
+        // Ouvrir dans une nouvelle page
+        window.open(url, '_blank');
       }
     } catch (error) {
-      console.error("Erreur lors de la lecture de la prononciation:", error);
+      console.error("Erreur lors de l'ouverture du lien:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ouvrir le lien de traduction."
+      });
     }
   };
 
@@ -198,11 +176,11 @@ const Game = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handlePlayPronunciation(currentTranslation.text, settings.targetLanguage)}
+                        onClick={() => handleOpenTranslation(currentTranslation.text, settings.targetLanguage)}
                         className="rounded-full bg-langlearn-blue text-white hover:bg-langlearn-blue-dark"
-                        aria-label="Écouter la prononciation"
+                        aria-label="Ouvrir la traduction"
                       >
-                        <Volume className="h-5 w-5" />
+                        <ExternalLink className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>

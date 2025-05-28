@@ -14,7 +14,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [languages, setLanguages] = useState(getLanguages());
   const [sourceLanguage, setSourceLanguage] = useState<Language>("fr");
-  const [targetLanguage, setTargetLanguage] = useState<Language>("kr");
+  const [targetLanguage, setTargetLanguage] = useState<Language>("ko");
   const [wordCount, setWordCount] = useState(5);
   const [availableCategories, setAvailableCategories] = useState<{id: WordCategory; label: string}[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<WordCategory[]>([]);
