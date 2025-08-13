@@ -19,13 +19,14 @@ export interface TranslationGroup {
 export interface LanguageDefinition {
   id: Language;
   label: string;
+  lang: string;
 }
 
 // Langues par défaut
 const defaultLanguages: LanguageDefinition[] = [
-  { id: 'fr', label: 'Français' },
-  { id: 'ko', label: 'Coréen' },
-  { id: 'en', label: 'Anglais' }
+  { id: 'fr', label: 'Français', lang: 'fr-FR' },
+  { id: 'ko', label: 'Coréen', lang: 'ko-KR' },
+  { id: 'en', label: 'Anglais', lang: 'en-US' }
 ];
 
 // Gestion des langues

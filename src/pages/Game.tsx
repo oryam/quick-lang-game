@@ -29,8 +29,10 @@ const Game = () => {
     wordTranslations
   } = useGameState();
 
-  // Référence pour l'élément audio
+  // Références pour les éléments audio
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const thinkingMusicRef = useRef<HTMLAudioElement | null>(null);
+  const tadaSoundRef = useRef<HTMLAudioElement | null>(null);
 
   // Récupérer les paramètres du jeu depuis le sessionStorage
   useEffect(() => {
@@ -47,11 +49,61 @@ const Game = () => {
     }
   }, [settings, initializeGame]);
 
+  // Effet pour gérer les sons selon l'état du jeu
+  useEffect(() => {
+    if (isPlaying && currentWord) {
+      if (!showTranslation && !isPaused) {
+        // Jouer la musique de réflexion pendant les 10 secondes
+        if (thinkingMusicRef.current) {
+          thinkingMusicRef.current.currentTime = 0;
+          thinkingMusicRef.current.loop = true;
+          thinkingMusicRef.current.volume = 0.3;
+          thinkingMusicRef.current.play().catch(console.error);
+        }
+      } else if (showTranslation) {
+        // Arrêter la musique de réflexion et jouer le son "tada"
+        if (thinkingMusicRef.current) {
+          thinkingMusicRef.current.pause();
+        }
+        if (tadaSoundRef.current) {
+          tadaSoundRef.current.currentTime = 0;
+          tadaSoundRef.current.volume = 0.5;
+          tadaSoundRef.current.play().catch(console.error);
+        }
+      }
+    }
+
+    // Pause/resume de la musique selon l'état de pause
+    if (thinkingMusicRef.current) {
+      if (isPaused && !showTranslation) {
+        thinkingMusicRef.current.pause();
+      } else if (!isPaused && !showTranslation && isPlaying) {
+        thinkingMusicRef.current.play().catch(console.error);
+      }
+    }
+  }, [showTranslation, isPaused, isPlaying, currentWord]);
+
+  // Arrêter tous les sons quand le jeu se termine ou change de mot
+  useEffect(() => {
+    return () => {
+      if (thinkingMusicRef.current) {
+        thinkingMusicRef.current.pause();
+      }
+    };
+  }, [currentWordIndex, isGameFinished]);
+
   // Helper function to get language label from ID
   const getLanguageLabel = (languageId: string) => {
     const languages = getLanguages();
     const language = languages.find(lang => lang.id === languageId);
     return language ? language.label : languageId;
+  };
+
+  // Helper function to get language lang property from ID
+  const getLanguageLang = (languageId: string) => {
+    const languages = getLanguages();
+    const language = languages.find(lang => lang.id === languageId);
+    return language ? language.lang : languageId;
   };
 
   const handleRestart = () => {
@@ -67,13 +119,13 @@ const Game = () => {
   };
 
   // Fonction pour ouvrir le lien de traduction Google
-  const handleOpenTranslation = (text: string, lang: string) => {
+  const handleOpenTranslation = (text: string, languageId: string) => {
     try {
       const encodedText = encodeURIComponent(text || '');
       
       if (encodedText) {
-        // Utiliser l'ID de la langue directement pour ttsLang
-        const ttsLang = lang;
+        // Utiliser la propriété 'lang' de la langue pour ttsLang
+        const ttsLang = getLanguageLang(languageId);
         const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodedText}`;
         
         // Ouvrir dans une nouvelle page
@@ -131,8 +183,16 @@ const Game = () => {
           </div>
         </div>
 
-        {/* Element audio pour la lecture de la prononciation */}
+        {/* Éléments audio cachés */}
         <audio ref={audioRef} />
+        <audio ref={thinkingMusicRef} preload="auto">
+          <source src="/sounds/thinking-music.mp3" type="audio/mpeg" />
+          <source src="/sounds/thinking-music.ogg" type="audio/ogg" />
+        </audio>
+        <audio ref={tadaSoundRef} preload="auto">
+          <source src="/sounds/tada.mp3" type="audio/mpeg" />
+          <source src="/sounds/tada.ogg" type="audio/ogg" />
+        </audio>
 
         {/* Game area */}
         {isPlaying ? (

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Language } from "@/data/words";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { Plus, Pen, Trash } from "lucide-react";
 export interface LanguageDefinition {
   id: Language;
   label: string;
+  lang: string;
 }
 
 interface LanguageManagerProps {
@@ -22,7 +22,7 @@ interface LanguageManagerProps {
 const LanguageManager: React.FC<LanguageManagerProps> = ({ languages, onLanguagesChange }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [newLanguage, setNewLanguage] = useState<LanguageDefinition>({ id: 'fr' as Language, label: '' });
+  const [newLanguage, setNewLanguage] = useState<LanguageDefinition>({ id: 'fr' as Language, label: '', lang: '' });
   const { toast } = useToast();
 
   const handleSaveLanguage = () => {
@@ -63,7 +63,7 @@ const LanguageManager: React.FC<LanguageManagerProps> = ({ languages, onLanguage
       
       onLanguagesChange(updatedLanguages);
       
-      setNewLanguage({ id: 'fr' as Language, label: '' });
+      setNewLanguage({ id: 'fr' as Language, label: '', lang: '' });
       setEditingIndex(null);
       setIsDialogOpen(false);
       
@@ -109,7 +109,7 @@ const LanguageManager: React.FC<LanguageManagerProps> = ({ languages, onLanguage
   };
 
   const handleAddLanguage = () => {
-    setNewLanguage({ id: 'fr' as Language, label: '' });
+    setNewLanguage({ id: 'fr' as Language, label: '', lang: '' });
     setEditingIndex(null);
     setIsDialogOpen(true);
   };
@@ -130,6 +130,7 @@ const LanguageManager: React.FC<LanguageManagerProps> = ({ languages, onLanguage
             <TableRow>
               <TableHead>Identifiant</TableHead>
               <TableHead>Libellé</TableHead>
+              <TableHead>Code langue</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -138,6 +139,7 @@ const LanguageManager: React.FC<LanguageManagerProps> = ({ languages, onLanguage
               <TableRow key={language.id}>
                 <TableCell className="font-mono">{language.id}</TableCell>
                 <TableCell>{language.label}</TableCell>
+                <TableCell>{language.lang}</TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
                     <Button
@@ -196,10 +198,20 @@ const LanguageManager: React.FC<LanguageManagerProps> = ({ languages, onLanguage
                 className="mt-1"
               />
             </div>
+            <div>
+              <Label htmlFor="languageCode">Code langue</Label>
+              <Input
+                id="languageCode"
+                value={newLanguage.lang}
+                onChange={(e) => setNewLanguage({...newLanguage, lang: e.target.value})}
+                placeholder="ex: fr-FR, ko-KR, en-US"
+                className="mt-1"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
-              setNewLanguage({ id: 'fr' as Language, label: '' });
+              setNewLanguage({ id: 'fr' as Language, label: '', lang: '' });
               setEditingIndex(null);
               setIsDialogOpen(false);
             }}>
