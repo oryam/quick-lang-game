@@ -126,7 +126,7 @@ const Game = () => {
       if (encodedText) {
         // Utiliser la propriété 'lang' de la langue pour ttsLang
         const ttsLang = languageId // getLanguageLang(languageId);
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodedText}`;
+        const url = `https://translate.google.com/?op=translate&sl=${ttsLang}&text=${encodedText}`;
         
         // Ouvrir dans une nouvelle page
         window.open(url, '_blank');
