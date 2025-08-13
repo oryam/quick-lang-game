@@ -10,8 +10,10 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "predeploy:clean": "rm -rf dist/*",
     "predeploy": "vite build",
-    "deploy": "gh-pages -d dist"
+    "predeploy:domain": "echo quicklang.animadong.com > dist/CNAME",
+    "deploy": "npm run predeploy:domain && gh-pages -d dist"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
